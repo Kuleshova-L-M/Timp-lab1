@@ -2,6 +2,7 @@
 #include <locale>
 #include <clocale>
 #include <string>
+#include <limits> // Добавлено для очистки буфера
 #include "modAlphaCipher.h"
 
 int main() {
@@ -9,19 +10,25 @@ int main() {
     std::wcin.imbue(std::locale(""));
     std::wcout.imbue(std::locale(""));
 
-    // лобальный блок try-catch на всю программу
     try {
         std::wstring key;
         std::wcout << L"Введите ключ: ";
-        std::wcin >> key;
+        
+        //  Используем getline, чтобы прочитать пустую строку
+        std::getline(std::wcin, key); 
 
-        modAlphaCipher cipher(key); // Конструктор может выбросить исключение
+        modAlphaCipher cipher(key);
 
         unsigned op;
         do {
-            std::wcout << L"Операция (0-выход, 1-зашифровать, 2-расшифровать): ";
-            if (!(std::wcin >> op))
-                throw cipher_error("Invalid operation input");
+            std::wcout << L"Шифратор готов. Введите операцию (0-выход, 1-зашифровать, 2-расшифровать): ";
+            
+            if (!(std::wcin >> op)) {
+                std::wcin.clear();
+                std::wcin.ignore(std::numeric_limits<std::streamsize>::max(), L'\n');
+                std::wcout << L"Ошибка ввода. Введите число.\n";
+                continue;
+            }
 
             if (op > 2) {
                 std::wcout << L"Недопустимая операция\n";
@@ -31,9 +38,13 @@ int main() {
             if (op > 0) {
                 std::wstring text;
                 std::wcout << L"Введите текст: ";
-                std::wcin >> text;
+                
+                // Очищаем буфер от Enter, который остался после ввода цифры
+                std::wcin.ignore(std::numeric_limits<std::streamsize>::max(), L'\n');
+                
+                //  Используем getline, чтобы поймать пустую строку или пробелы
+                std::getline(std::wcin, text);
 
-                // Локальный блок try-catch для перехвата ошибок валидации текста
                 try {
                     if (op == 1) {
                         std::wcout << L"Зашифрованный текст: "
