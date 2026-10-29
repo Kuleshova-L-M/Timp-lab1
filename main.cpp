@@ -1,35 +1,57 @@
-#pragma once
-#include <vector>
+#include <iostream>
+#include <locale>
+#include <clocale>
 #include <string>
-#include <map>
-#include <stdexcept> //  Для std::invalid_argument
+#include "modAlphaCipher.h"
 
-// Класс-исключение для модуля
-class cipher_error : public std::invalid_argument {
-public:
-    explicit cipher_error(const std::string& what_arg) : std::invalid_argument(what_arg) {}
-    explicit cipher_error(const char* what_arg) : std::invalid_argument(what_arg) {}
-};
+int main() {
+    std::setlocale(LC_ALL, "");
+    std::wcin.imbue(std::locale(""));
+    std::wcout.imbue(std::locale(""));
 
-class modAlphaCipher {
-private:
-    std::wstring numAlpha = L"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
-    std::map<wchar_t, int> alphaNum;
-    std::vector<int> key;
+    // лобальный блок try-catch на всю программу
+    try {
+        std::wstring key;
+        std::wcout << L"Введите ключ: ";
+        std::wcin >> key;
 
-    //  Методы валидации данных
-    std::wstring getValidKey(const std::wstring& s) const;
-    std::wstring getValidOpenText(const std::wstring& s) const;
-    std::wstring getValidCipherText(const std::wstring& s) const;
+        modAlphaCipher cipher(key); // Конструктор может выбросить исключение
 
-    std::vector<int> convert(const std::wstring& s) const;
-    std::wstring convert(const std::vector<int>& v) const;
+        unsigned op;
+        do {
+            std::wcout << L"Операция (0-выход, 1-зашифровать, 2-расшифровать): ";
+            if (!(std::wcin >> op))
+                throw cipher_error("Invalid operation input");
 
-public:
-    modAlphaCipher() = delete;
-    modAlphaCipher(const std::wstring& skey);
+            if (op > 2) {
+                std::wcout << L"Недопустимая операция\n";
+                continue;
+            }
 
-    std::wstring encrypt(const std::wstring& open_text);
-    std::wstring decrypt(const std::wstring& cipher_text);
-};
+            if (op > 0) {
+                std::wstring text;
+                std::wcout << L"Введите текст: ";
+                std::wcin >> text;
 
+                // Локальный блок try-catch для перехвата ошибок валидации текста
+                try {
+                    if (op == 1) {
+                        std::wcout << L"Зашифрованный текст: "
+                                   << cipher.encrypt(text) << L"\n";
+                    } else {
+                        std::wcout << L"Расшифрованный текст: "
+                                   << cipher.decrypt(text) << L"\n";
+                    }
+                } catch (const cipher_error& e) {
+                    std::wcerr << L"Ошибка: " << e.what() << L"\n";
+                }
+            }
+        } while (op != 0);
+    } catch (const cipher_error& e) {
+        std::wcerr << L"Ошибка: " << e.what() << L"\n";
+    } catch (const std::exception& e) {
+        std::wcerr << L"Ошибка: " << e.what() << L"\n";
+    }
+
+    return 0;
+}

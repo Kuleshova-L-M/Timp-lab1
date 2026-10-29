@@ -1,6 +1,6 @@
 
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -02
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2
 TARGET = gronsfeld_cipher
 OBJS = main.o modAlphaCipher.o
 all: $(TARGET)
